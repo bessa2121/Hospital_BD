@@ -64,3 +64,66 @@ medico_id (PK)
 nome
 crm
 especialidade
+
+
+
+
+Paciente ↔ Agendamento:
+
+Relacionamento 1:N (um paciente pode ter muitos agendamentos).
+O campo paciente_id na tabela Agendamento é uma chave estrangeira.
+
+
+
+Funcionario_Recepcao ↔ Agendamento:
+
+Relacionamento 1:N (um funcionário pode registrar muitos agendamentos).
+O campo funcionario_id na tabela Agendamento é uma chave estrangeira.
+
+
+Paciente ↔ Visita:
+
+Relacionamento 1:N (um paciente pode receber muitas visitas).
+O campo paciente_id na tabela Visita é uma chave estrangeira.
+
+
+
+Funcionario_Recepcao ↔ Visita:
+
+Relacionamento 1:N (um funcionário pode registrar muitas visitas).
+O campo funcionario_id na tabela Visita é uma chave estrangeira.
+
+
+
+Paciente ↔ Log_Atendimento_Recepcao:
+
+Relacionamento 1:N (um paciente pode ter muitos logs de atendimento).
+O campo paciente_id na tabela Log_Atendimento_Recepcao é uma chave estrangeira.
+
+
+
+Funcionario_Recepcao ↔ Log_Atendimento_Recepcao:
+
+Relacionamento 1:N (um funcionário pode registrar muitos logs de atendimento).
+O campo funcionario_id na tabela Log_Atendimento_Recepcao é uma chave estrangeira.
+
+
+
+Paciente ↔ Internacao:
+
+Relacionamento 1:N (um paciente pode ter várias internações).
+O campo paciente_id na tabela Internacao é uma chave estrangeira.
+
+
+
+UnidadeInternacao ↔ Internacao:
+
+Relacionamento 1:N (uma unidade pode ter várias internações).
+O campo unidade_id na tabela Internacao é uma chave estrangeira.
+
+
+
+MedicoInternacao ↔ Internacao:
+
+Relacionamento 1:N (um médico pode ser responsável por várias internações).
+O campo medico_id na tabela Internacao é uma chave estrangeira.
