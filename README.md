@@ -127,3 +127,73 @@ MedicoInternacao ↔ Internacao:
 
 Relacionamento 1:N (um médico pode ser responsável por várias internações).
 O campo medico_id na tabela Internacao é uma chave estrangeira.
+
+
+
+
+
+--Usar Snake case para atributos , usar Pascal case para o nome da tabela e tudo maiusculo para tipagem 
+--ATT: Sempre use underline(_) para separar as palavras.
+--Obs: Use esse script como base
+
+
+-- Criando a tabela de Pacientes
+CREATE TABLE Paciente (
+    paciente_id INT AUTO_INCREMENT PRIMARY KEY,
+    rg INT UNIQUE NOT NULL,  -- RG único do paciente
+    nome VARCHAR(50) NOT NULL,
+    cpf VARCHAR(11) UNIQUE NOT NULL,
+    data_nascimento DATE NOT NULL,
+    sexo CHAR(1) NOT NULL,  -- 'M' para Masculino, 'F' para Feminino
+    telefone VARCHAR(11),
+    endereco VARCHAR(150),
+    email VARCHAR(100),
+    convenio BOOLEAN NOT NULL  -- Indica se o paciente possui convênio
+);
+
+-- Criando a tabela de Funcionários da Recepção
+CREATE TABLE Funcionario_Recepcao (
+    funcionario_id INT AUTO_INCREMENT PRIMARY KEY,
+    rg INT UNIQUE NOT NULL,  -- RG único do funcionário
+    nome VARCHAR(50) NOT NULL,
+    cargo VARCHAR(50) NOT NULL,
+    cpf VARCHAR(11) UNIQUE NOT NULL,
+    telefone VARCHAR(11),
+    email VARCHAR(100)
+);
+
+-- Criando a tabela de Agendamentos
+CREATE TABLE Agendamento (
+    agendamento_id INT AUTO_INCREMENT PRIMARY KEY,
+    paciente_id INT NOT NULL,
+    funcionario_id INT NOT NULL,  -- Referência ao funcionário da recepção
+    data_agendamento DATETIME NOT NULL,
+    tipo_consulta VARCHAR(80),
+    status VARCHAR(20),  -- Pode ser 'Agendado', 'Cancelado', 'Realizado'
+    FOREIGN KEY (paciente_id) REFERENCES PACIENTE(paciente_id),
+    FOREIGN KEY (funcionario_id) REFERENCES FUNCIONARIO_RECEPCAO(funcionario_id)
+);
+
+-- Criando a tabela de Visitas
+CREATE TABLE Visita (
+    visita_id INT AUTO_INCREMENT PRIMARY KEY,
+    paciente_id INT NOT NULL,
+    funcionario_id INT NOT NULL,  -- Referência ao funcionário da recepção
+    data_visita DATETIME NOT NULL,
+    nome_visitante VARCHAR(50),
+    relacionamento_visitante VARCHAR(50),  -- Ex: 'Amigo', 'Familiar', etc
+    FOREIGN KEY (paciente_id) REFERENCES PACIENTE(paciente_id),
+    FOREIGN KEY (funcionario_id) REFERENCES FUNCIONARIO_RECEPCAO(funcionario_id)
+);
+
+-- Tabela de Log de Ações da Recepção (ex: Atendimento)
+CREATE TABLE Log_Atendimento_Recepcao (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    funcionario_id INT NOT NULL,  -- Quem fez o atendimento
+    paciente_id INT NOT NULL,
+    acao VARCHAR(255),  -- Exemplo: 'Paciente atendido', 'Agendamento realizado'
+    data_acao DATETIME NOT NULL,
+    FOREIGN KEY (funcionario_id) REFERENCES FUNCIONARIO_RECEPCAO(funcionario_id),
+    FOREIGN KEY (paciente_id) REFERENCES PACIENTE(paciente_id)
+);
+
