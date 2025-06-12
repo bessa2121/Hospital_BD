@@ -25,7 +25,6 @@ CREATE TABLE funcionario_recepcao (
     funcionario_id INT AUTO_INCREMENT PRIMARY KEY,
     rg INT UNIQUE NOT NULL,
     nome VARCHAR(50) NOT NULL,
-    cargo VARCHAR(50) NOT NULL,
     cpf VARCHAR(11) UNIQUE NOT NULL,
     telefone VARCHAR(11),
     email VARCHAR(100)
