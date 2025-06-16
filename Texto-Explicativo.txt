@@ -1,0 +1,2 @@
+Um paciente procura um agendamento no meu hospital, meu funcionário da recepção registra esse agendamento.
+O paciente faz o atendimento realizado pelo funcionário da recepção. Esse paciente vai para uma consulta realizada pelo médico especializado. Esse médico lhe entrega o resultado com o diagnóstico e o indica uma internação na minha unidade hospitalar. Esse paciente fica em tratamento na unidade de internação do hospital.
