@@ -1,76 +1,635 @@
-# Hospital_BD
-Trabalho de sala de criação de banco de dados com tema hospitalar
-MER :
+CREATE DATABASE IF NOT EXISTS Hospital_BD;
+USE Hospital_BD;
 
-Entidade - Paciente
-Atributos
-PK paciente_id
-nome
-cpf
-data_nascimento
-sexo
-telefone
-endereco
-convenio
+DROP TABLE IF EXISTS Consulta;
+DROP TABLE IF EXISTS Receita;
+DROP TABLE IF EXISTS Estoque_remedio;
+DROP TABLE IF EXISTS Remedio;
+DROP TABLE IF EXISTS Sala;
+DROP TABLE IF EXISTS Especialidade_medico;
+DROP TABLE IF EXISTS Especialidade_enfermeiro;
+DROP TABLE IF EXISTS Funcionario;
+DROP TABLE IF EXISTS Cargo;
+DROP TABLE IF EXISTS Paciente;
 
-Entidade - Agendamento
-Atributos
-PK agendamento_id
-FK funcionario_id
-FK paciente_id
-data_agendamento
-tipo_consulta
-status
 
-Entidade - Funcionario_Recepcao
-Atributos
-PK funcionario_id
-FK atendimento_id
-nome
-cargo
-cpf
-telefone
+CREATE TABLE Paciente (
+    id_paciente INT NOT NULL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    sexo VARCHAR(20) NOT NULL,
+    telefone VARCHAR(15) NOT NULL,
+    data_nascimento DATE NOT NULL,
+    CPF CHAR(11) UNIQUE NOT NULL,
+    CEP CHAR(8) UNIQUE NOT NULL,
+    complemento_endereco VARCHAR(10) NOT NULL,
+    endereco VARCHAR(120) NOT NULL,
+    RG CHAR(9) NOT NULL,
+    UF_paciente CHAR(2) NOT NULL
+);
 
-Entidade - Atendimento
-Atributos
-PK atendimento_id
-FK paciente_id
-data
-motivo
+CREATE TABLE Cargo (
+    id_cargo INT NOT NULL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL UNIQUE
+);
 
-Entidade - Consulta
-Atributos
-PK consulta_id
-FK medico_id
-FK paciente_id
-data
-diagnostico
+CREATE TABLE Funcionario (
+    id_funcionario INT NOT NULL PRIMARY KEY,
+    id_cargo INT NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    sexo VARCHAR(20) NOT NULL,
+    telefone VARCHAR(15) NOT NULL,
+    data_nascimento DATE NOT NULL,
+    CPF CHAR(11) UNIQUE NOT NULL,
+    CEP CHAR(8) UNIQUE NOT NULL,
+    complemento_endereco VARCHAR(10) NOT NULL,
+    endereco VARCHAR(120) NOT NULL,
+    RG CHAR(9) NOT NULL,
+    UF_funcionario CHAR(2) NOT NULL,
+    COREN VARCHAR(20),
+    CRM VARCHAR(6),
+    CHECK (
+        (CRM IS NOT NULL AND COREN IS NULL) OR
+        (CRM IS NULL AND COREN IS NOT NULL)
+    ),
+     FOREIGN KEY (id_cargo) REFERENCES Cargo(id_cargo)
+);
 
-Entidade - Medico
-Atributos
-PK medico_id
-nome
-especialidade
+CREATE TABLE Especialidade_enfermeiro (
+    id_especialidade_enfermeiro INT NOT NULL PRIMARY KEY,
+    id_funcionario INT NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    UNIQUE (id_funcionario, nome),
+    FOREIGN KEY (id_funcionario) REFERENCES Funcionario(id_funcionario)
+);
 
-Entidade - Internacao
-Atributos
-PK internacao_id
-FK paciente_id
-FK unidade_id
-FK medico_id
-motivo_internacao
-data_admissao
-data_saida
+CREATE TABLE Especialidade_medico (
+    id_especialidade_medico INT NOT NULL PRIMARY KEY,
+    id_funcionario INT NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    UNIQUE (id_funcionario, nome),
+    FOREIGN KEY (id_funcionario) REFERENCES Funcionario(id_funcionario)
+);
 
-Entidade - Unidade_Internacao
-Atributos
-PK unidade_id
-nome_unidade
+CREATE TABLE Sala (
+    id_sala INT PRIMARY KEY NOT NULL,
+    id_funcionario INT NOT NULL,
+    FOREIGN KEY (id_funcionario) REFERENCES Funcionario(id_funcionario)
+);
 
-Entidade - Visita
-Atributos
-PK visita_id
-FK paciente_id
-data_visita
-nome_visitante
-relacionamento_visitante
+CREATE TABLE Remedio (
+    id_remedio INT PRIMARY KEY NOT NULL,
+    id_paciente INT NOT NULL,
+    nome_remedio VARCHAR(100) NOT NULL UNIQUE,
+    quantidade_ingerida VARCHAR(100) NOT NULL,
+    FOREIGN KEY (id_paciente) REFERENCES Paciente(id_paciente)
+);
+
+CREATE TABLE Estoque_remedio (
+    id_estoque INT PRIMARY KEY NOT NULL,
+    id_remedio INT NOT NULL,
+    id_funcionario INT NOT NULL,
+    quantidade INT NOT NULL,
+    data_entrada DATE NOT NULL,
+    data_validade DATE NOT NULL,
+	FOREIGN KEY (id_remedio) REFERENCES Remedio(id_remedio),
+    FOREIGN KEY (id_funcionario) REFERENCES Funcionario(id_funcionario)
+);
+
+CREATE TABLE Receita (
+    id_receita INT NOT NULL PRIMARY KEY,
+    id_remedio INT NOT NULL,
+    id_paciente INT NOT NULL,
+    id_funcionario INT NOT NULL,
+    data_emissao DATE NOT NULL,
+    quantidade VARCHAR(50) NOT NULL,
+    dosagem VARCHAR(50) NOT NULL,
+    periodo_consumo VARCHAR(20) NOT NULL,
+    UF_paciente CHAR(2) NOT NULL,
+    UF_funcionario CHAR(2) NOT NULL,
+	FOREIGN KEY (id_remedio) REFERENCES Remedio(id_remedio),
+    FOREIGN KEY (id_paciente) REFERENCES Paciente(id_paciente),
+    FOREIGN KEY (id_funcionario) REFERENCES Funcionario(id_funcionario)
+);
+
+CREATE TABLE Consulta (
+    id_consulta INT PRIMARY KEY NOT NULL,
+    id_paciente INT NOT NULL,
+    id_funcionario INT NOT NULL,
+    id_sala INT NOT NULL,
+    id_receita INT NOT NULL,
+    temperatura DECIMAL(4,1) NOT NULL,
+    pressao_arterial VARCHAR(7) NOT NULL,
+    frequencia_cardiaca INT NOT NULL,
+    diagnostico VARCHAR(200) NOT NULL,
+    data_hora DATETIME NOT NULL,
+	FOREIGN KEY (id_paciente) REFERENCES Paciente(id_paciente),
+    FOREIGN KEY (id_funcionario) REFERENCES Funcionario(id_funcionario),
+    FOREIGN KEY (id_sala) REFERENCES Sala(id_sala),
+	FOREIGN KEY (id_receita) REFERENCES Receita(id_receita)
+);
+
+INSERT INTO Paciente (id_paciente, nome, sexo, telefone, data_nascimento, CPF, CEP, complemento_endereco, endereco, RG, UF_paciente) VALUES
+(1, 'Ana Clara Souza', 'Feminino', '11987654321', '1990-05-12', '12345678901', '01001000', 'Apt 101', 'Rua A, 100', '123456789', 'SP'),
+(2, 'João Pedro Almeida', 'Masculino', '21987654321', '1988-07-22', '22345678901', '20040002', 'Casa 2', 'Rua B, 200', '223456789', 'RJ'),
+(3, 'Maria Eduarda Santos', 'Feminino', '31987654321', '1995-01-05', '32345678901', '30110020', 'Bloco 3', 'Rua C, 300', '323456789', 'MG'),
+(4, 'Lucas Gabriel Oliveira', 'Masculino', '41987654321', '2000-03-15', '42345678901', '40020030', 'Apt 202', 'Rua D, 400', '423456789', 'BA'),
+(5, 'Beatriz Ferreira', 'Feminino', '51987654321', '1993-09-09', '52345678901', '90010040', 'Casa 5', 'Rua E, 500', '523456789', 'RS'),
+(6, 'Rafael Costa', 'Masculino', '61987654321', '1992-12-20', '62345678901', '60010050', 'Apt 301', 'Rua F, 600', '623456789', 'CE'),
+(7, 'Isabela Martins', 'Feminino', '71987654321', '1999-04-10', '72345678901', '70020060', 'Bloco B', 'Rua G, 700', '723456789', 'DF'),
+(8, 'Gabriel Lima', 'Masculino', '81987654321', '1985-06-18', '82345678901', '80030070', 'Casa 8', 'Rua H, 800', '823456789', 'PR'),
+(9, 'Juliana Rocha', 'Feminino', '91987654321', '1998-11-11', '92345678901', '90040080', 'Apt 404', 'Rua I, 900', '923456789', 'RS'),
+(10, 'Matheus Barbosa', 'Masculino', '11976543210', '1997-02-02', '13345678901', '01002000', 'Casa 10', 'Rua J, 1000', '133456789', 'SP'),
+(11, 'Fernanda Gomes', 'Feminino', '21976543210', '1996-07-07', '14345678901', '20050001', 'Bloco A', 'Rua K, 1100', '143456789', 'RJ'),
+(12, 'Pedro Henrique', 'Masculino', '31976543210', '1989-08-25', '15345678901', '30120010', 'Apt 502', 'Rua L, 1200', '153456789', 'MG'),
+(13, 'Carolina Dias', 'Feminino', '41976543210', '1991-01-19', '16345678901', '40030020', 'Casa 12', 'Rua M, 1300', '163456789', 'BA'),
+(14, 'Thiago Ribeiro', 'Masculino', '51976543210', '1994-05-29', '17345678901', '90020030', 'Bloco C', 'Rua N, 1400', '173456789', 'RS'),
+(15, 'Amanda Silva', 'Feminino', '61976543210', '2001-03-03', '18345678901', '60020040', 'Apt 601', 'Rua O, 1500', '183456789', 'CE'),
+(16, 'Rodrigo Santos', 'Masculino', '71976543210', '1990-10-10', '19345678901', '70030050', 'Casa 15', 'Rua P, 1600', '193456789', 'DF'),
+(17, 'Larissa Carvalho', 'Feminino', '81976543210', '1987-09-09', '20345678901', '80040060', 'Apt 702', 'Rua Q, 1700', '203456789', 'PR'),
+(18, 'Eduardo Almeida', 'Masculino', '91976543210', '1992-04-14', '21345678901', '90050070', 'Bloco D', 'Rua R, 1800', '213456789', 'RS'),
+(19, 'Camila Teixeira', 'Feminino', '11965432109', '1993-12-12', '22345678902', '01003000', 'Casa 18', 'Rua S, 1900', '223456780', 'SP'),
+(20, 'Felipe Araújo', 'Masculino', '21965432109', '1995-11-20', '23345678902', '20060002', 'Apt 801', 'Rua T, 2000', '233456780', 'RJ'),
+(21, 'Mariana Castro', 'Feminino', '31965432109', '1988-02-15', '24345678902', '30130020', 'Bloco E', 'Rua U, 2100', '243456780', 'MG'),
+(22, 'André Luiz', 'Masculino', '41965432109', '1999-06-30', '25345678902', '40040030', 'Casa 20', 'Rua V, 2200', '253456780', 'BA'),
+(23, 'Patrícia Mendes', 'Feminino', '51965432109', '1991-05-05', '26345678902', '90030040', 'Apt 902', 'Rua W, 2300', '263456780', 'RS'),
+(24, 'Diego Nascimento', 'Masculino', '61965432109', '1997-08-08', '27345678902', '60030050', 'Bloco F', 'Rua X, 2400', '273456780', 'CE'),
+(25, 'Gabriela Souza', 'Feminino', '71965432109', '2000-09-19', '28345678902', '70040060', 'Casa 25', 'Rua Y, 2500', '283456780', 'DF'),
+(26, 'Leonardo Oliveira', 'Masculino', '81965432109', '1996-03-03', '29345678902', '80050070', 'Apt 1001', 'Rua Z, 2600', '293456780', 'PR'),
+(27, 'Sofia Martins', 'Feminino', '91965432109', '1998-07-07', '30345678902', '90060080', 'Bloco G', 'Rua AA, 2700', '303456780', 'RS'),
+(28, 'Daniel Lima', 'Masculino', '11954321098', '1994-01-25', '31345678902', '01004000', 'Casa 28', 'Rua AB, 2800', '313456780', 'SP'),
+(29, 'Luana Rocha', 'Feminino', '21954321098', '1992-02-14', '32345678902', '20070002', 'Apt 1101', 'Rua AC, 2900', '323456780', 'RJ'),
+(30, 'Bruno Ferreira', 'Masculino', '31954321098', '1990-12-12', '33345678902', '30140020', 'Bloco H', 'Rua AD, 3000', '333456780', 'MG'),
+(31, 'Vanessa Dias', 'Feminino', '41954321098', '1986-05-09', '34345678902', '40050030', 'Casa 30', 'Rua AE, 3100', '343456780', 'BA'),
+(32, 'Marcelo Ribeiro', 'Masculino', '51954321098', '2002-07-20', '35345678902', '90040040', 'Apt 1201', 'Rua AF, 3200', '353456780', 'RS'),
+(33, 'Tatiane Silva', 'Feminino', '61954321098', '1993-03-03', '36345678902', '60040050', 'Bloco I', 'Rua AG, 3300', '363456780', 'CE'),
+(34, 'Gustavo Santos', 'Masculino', '71954321098', '1991-11-11', '37345678902', '70050060', 'Casa 34', 'Rua AH, 3400', '373456780', 'DF'),
+(35, 'Bruna Carvalho', 'Feminino', '81954321098', '1997-04-14', '38345678902', '80060070', 'Apt 1301', 'Rua AI, 3500', '383456780', 'PR'),
+(36, 'Renato Almeida', 'Masculino', '91954321098', '1989-06-06', '39345678902', '90070080', 'Bloco J', 'Rua AJ, 3600', '393456780', 'RS'),
+(37, 'Letícia Teixeira', 'Feminino', '11943210987', '1996-10-10', '40345678902', '01005000', 'Casa 37', 'Rua AK, 3700', '403456780', 'SP'),
+(38, 'Otávio Araújo', 'Masculino', '21943210987', '1995-12-12', '41345678902', '20080002', 'Apt 1401', 'Rua AL, 3800', '413456780', 'RJ'),
+(39, 'Clara Castro', 'Feminino', '31943210987', '1987-08-08', '42345678902', '30150020', 'Bloco K', 'Rua AM, 3900', '423456780', 'MG'),
+(40, 'Henrique Luiz', 'Masculino', '41943210987', '1992-07-07', '43345678902', '40060030', 'Casa 40', 'Rua AN, 4000', '433456780', 'BA'),
+(41, 'Aline Mendes', 'Feminino', '51943210987', '1988-09-09', '44345678902', '90050040', 'Apt 1501', 'Rua AO, 4100', '443456780', 'RS'),
+(42, 'Murilo Nascimento', 'Masculino', '61943210987', '1991-05-05', '45345678902', '60050050', 'Bloco L', 'Rua AP, 4200', '453456780', 'CE'),
+(43, 'Débora Souza', 'Feminino', '71943210987', '1999-01-01', '46345678902', '70060060', 'Casa 43', 'Rua AQ, 4300', '463456780', 'DF'),
+(44, 'Fábio Oliveira', 'Masculino', '81943210987', '1990-11-11', '47345678902', '80070070', 'Apt 1601', 'Rua AR, 4400', '473456780', 'PR'),
+(45, 'Viviane Martins', 'Feminino', '91943210987', '1993-04-04', '48345678902', '90080080', 'Bloco M', 'Rua AS, 4500', '483456780', 'RS'),
+(46, 'Alexandre Lima', 'Masculino', '11932109876', '1986-06-06', '49345678902', '01006000', 'Casa 46', 'Rua AT, 4600', '493456780', 'SP'),
+(47, 'Evelyn Rocha', 'Feminino', '21932109876', '1998-08-08', '50345678902', '20090002', 'Apt 1701', 'Rua AU, 4700', '503456780', 'RJ'),
+(48, 'Igor Barbosa', 'Masculino', '31932109876', '1995-03-03', '51345678902', '30160020', 'Bloco N', 'Rua AV, 4800', '513456780', 'MG'),
+(49, 'Tatiane Gomes', 'Feminino', '41932109876', '1992-02-02', '52345678902', '40070030', 'Casa 49', 'Rua AW, 4900', '523456780', 'BA'),
+(50, 'Victor Henrique', 'Masculino', '51932109876', '2000-05-05', '53345678902', '90090040', 'Apt 1801', 'Rua AX, 5000', '533456780', 'RS');
+
+INSERT INTO Funcionario (id_funcionario, id_cargo, nome, sexo, telefone, data_nascimento, CPF, CEP, complemento_endereco, endereco, RG, UF_funcionario, COREN, CRM) VALUES
+-- Médicos (id_cargo = 1, CRM preenchido)
+(1, 1, 'Dr. Carlos Silva', 'Masculino', '11988887777', '1980-05-12', '60000000001', '01001001', 'Apt 101', 'Rua Médicos, 100', '100000001', 'SP', NULL, 'CRM001'),
+(2, 1, 'Dra. Fernanda Costa', 'Feminino', '21988887777', '1985-07-22', '60000000002', '20040001', 'Casa 2', 'Rua Médicos, 200', '100000002', 'RJ', NULL, 'CRM002'),
+(3, 1, 'Dr. João Pereira', 'Masculino', '31988887777', '1978-03-15', '60000000003', '30110021', 'Bloco 3', 'Rua Médicos, 300', '100000003', 'MG', NULL, 'CRM003'),
+(4, 1, 'Dra. Beatriz Santos', 'Feminino', '41988887777', '1990-09-09', '60000000004', '40020031', 'Apt 202', 'Rua Médicos, 400', '100000004', 'BA', NULL, 'CRM004'),
+(5, 1, 'Dr. Rodrigo Almeida', 'Masculino', '51988887777', '1982-12-20', '60000000005', '90010041', 'Casa 5', 'Rua Médicos, 500', '100000005', 'RS', NULL, 'CRM005'),
+(6, 1, 'Dra. Juliana Martins', 'Feminino', '61988887777', '1989-04-10', '60000000006', '60010051', 'Apt 301', 'Rua Médicos, 600', '100000006', 'CE', NULL, 'CRM006'),
+(7, 1, 'Dr. Felipe Nogueira', 'Masculino', '71988887777', '1975-06-18', '60000000007', '70020061', 'Bloco B', 'Rua Médicos, 700', '100000007', 'DF', NULL, 'CRM007'),
+(8, 1, 'Dra. Camila Rocha', 'Feminino', '81988887777', '1992-11-11', '60000000008', '80030071', 'Casa 8', 'Rua Médicos, 800', '100000008', 'PR', NULL, 'CRM008'),
+(9, 1, 'Dr. Marcelo Oliveira', 'Masculino', '91988887777', '1987-02-02', '60000000009', '90040081', 'Apt 404', 'Rua Médicos, 900', '100000009', 'RS', NULL, 'CRM009'),
+(10, 1, 'Dra. Larissa Mendes', 'Feminino', '11987776655', '1988-07-07', '60000000010', '01002001', 'Casa 10', 'Rua Médicos, 1000', '100000010', 'SP', NULL, 'CRM010'),
+(11, 1, 'Dr. André Carvalho', 'Masculino', '21987776655', '1981-08-25', '60000000011', '20050002', 'Bloco A', 'Rua Médicos, 1100', '100000011', 'RJ', NULL, 'CRM011'),
+(12, 1, 'Dra. Mariana Dias', 'Feminino', '31987776655', '1979-01-19', '60000000012', '30120011', 'Apt 502', 'Rua Médicos, 1200', '100000012', 'MG', NULL, 'CRM012'),
+(13, 1, 'Dr. Gustavo Lima', 'Masculino', '41987776655', '1991-05-29', '60000000013', '40030021', 'Casa 12', 'Rua Médicos, 1300', '100000013', 'BA', NULL, 'CRM013'),
+(14, 1, 'Dra. Patrícia Barbosa', 'Feminino', '51987776655', '1983-03-03', '60000000014', '90020031', 'Bloco C', 'Rua Médicos, 1400', '100000014', 'RS', NULL, 'CRM014'),
+(15, 1, 'Dr. Tiago Ferreira', 'Masculino', '61987776655', '1984-10-10', '60000000015', '60020041', 'Apt 601', 'Rua Médicos, 1500', '100000015', 'CE', NULL, 'CRM015'),
+(16, 1, 'Dra. Isabela Gomes', 'Feminino', '71987776655', '1986-09-09', '60000000016', '70030051', 'Casa 15', 'Rua Médicos, 1600', '100000016', 'DF', NULL, 'CRM016'),
+(17, 1, 'Dr. Bruno Ribeiro', 'Masculino', '81987776655', '1980-04-14', '60000000017', '80040061', 'Apt 702', 'Rua Médicos, 1700', '100000017', 'PR', NULL, 'CRM017'),
+(18, 1, 'Dra. Vanessa Lopes', 'Feminino', '91987776655', '1993-12-12', '60000000018', '90050071', 'Bloco D', 'Rua Médicos, 1800', '100000018', 'RS', NULL, 'CRM018'),
+(19, 1, 'Dr. Eduardo Batista', 'Masculino', '11976655443', '1982-11-20', '60000000019', '01003001', 'Casa 18', 'Rua Médicos, 1900', '100000019', 'SP', NULL, 'CRM019'),
+(20, 1, 'Dra. Aline Castro', 'Feminino', '21976655443', '1984-02-15', '60000000020', '20060003', 'Apt 801', 'Rua Médicos, 2000', '100000020', 'RJ', NULL, 'CRM020'),
+
+-- Enfermeiros (id_cargo = 2, COREN preenchido)
+(21, 2, 'Enf. Marcos Souza', 'Masculino', '31976655443', '1988-06-30', '60000000021', '30130021', 'Bloco E', 'Rua Enfermeiros, 2100', '100000021', 'MG', 'COREN001', NULL),
+(22, 2, 'Enf. Carla Ramos', 'Feminino', '41976655443', '1991-05-05', '60000000022', '40040031', 'Casa 20', 'Rua Enfermeiros, 2200', '100000022', 'BA', 'COREN002', NULL),
+(23, 2, 'Enf. Daniel Melo', 'Masculino', '51976655443', '1985-08-08', '60000000023', '90030041', 'Apt 902', 'Rua Enfermeiros, 2300', '100000023', 'RS', 'COREN003', NULL),
+(24, 2, 'Enf. Tatiane Moreira', 'Feminino', '61976655443', '1989-09-19', '60000000024', '60030051', 'Bloco F', 'Rua Enfermeiros, 2400', '100000024', 'CE', 'COREN004', NULL),
+(25, 2, 'Enf. Fábio Lima', 'Masculino', '71976655443', '1990-03-03', '60000000025', '70040061', 'Casa 25', 'Rua Enfermeiros, 2500', '100000025', 'DF', 'COREN005', NULL),
+(26, 2, 'Enf. Débora Rocha', 'Feminino', '81976655443', '1987-07-07', '60000000026', '80050071', 'Apt 1001', 'Rua Enfermeiros, 2600', '100000026', 'PR', 'COREN006', NULL),
+(27, 2, 'Enf. Leonardo Teixeira', 'Masculino', '91976655443', '1992-01-25', '60000000027', '90060081', 'Bloco G', 'Rua Enfermeiros, 2700', '100000027', 'RS', 'COREN007', NULL),
+(28, 2, 'Enf. Bruna Nunes', 'Feminino', '11965544332', '1994-02-14', '60000000028', '01004001', 'Casa 28', 'Rua Enfermeiros, 2800', '100000028', 'SP', 'COREN008', NULL),
+(29, 2, 'Enf. Guilherme Pires', 'Masculino', '21965544332', '1986-12-12', '60000000029', '20070003', 'Apt 1101', 'Rua Enfermeiros, 2900', '100000029', 'RJ', 'COREN009', NULL),
+(30, 2, 'Enf. Rafaela Vieira', 'Feminino', '31965544332', '1988-05-09', '60000000030', '30140021', 'Bloco H', 'Rua Enfermeiros, 3000', '100000030', 'MG', 'COREN010', NULL),
+(31, 2, 'Enf. Thiago Moura', 'Masculino', '41965544332', '1984-07-20', '60000000031', '40050031', 'Casa 30', 'Rua Enfermeiros, 3100', '100000031', 'BA', 'COREN011', NULL),
+(32, 2, 'Enf. Letícia Faria', 'Feminino', '51965544332', '1992-03-03', '60000000032', '90040041', 'Apt 1201', 'Rua Enfermeiros, 3200', '100000032', 'RS', 'COREN012', NULL),
+(33, 2, 'Enf. Murilo Campos', 'Masculino', '61965544332', '1989-11-11', '60000000033', '60040051', 'Bloco I', 'Rua Enfermeiros, 3300', '100000033', 'CE', 'COREN013', NULL),
+(34, 2, 'Enf. Camila Pacheco', 'Feminino', '71965544332', '1995-04-14', '60000000034', '70050061', 'Casa 34', 'Rua Enfermeiros, 3400', '100000034', 'DF', 'COREN014', NULL),
+(35, 2, 'Enf. Henrique Rezende', 'Masculino', '81965544332', '1987-06-06', '60000000035', '80060071', 'Apt 1301', 'Rua Enfermeiros, 3500', '100000035', 'PR', 'COREN015', NULL),
+(36, 2, 'Enf. Ana Paula Lopes', 'Feminino', '91965544332', '1991-10-10', '60000000036', '90070081', 'Bloco J', 'Rua Enfermeiros, 3600', '100000036', 'RS', 'COREN016', NULL),
+(37, 2, 'Enf. Samuel Torres', 'Masculino', '11954433221', '1986-12-12', '60000000037', '01005001', 'Casa 37', 'Rua Enfermeiros, 3700', '100000037', 'SP', 'COREN017', NULL),
+(38, 2, 'Enf. Larissa Duarte', 'Feminino', '21954433221', '1988-08-08', '60000000038', '20080003', 'Apt 1401', 'Rua Enfermeiros, 3800', '100000038', 'RJ', 'COREN018', NULL),
+(39, 2, 'Enf. Alexandre Tavares', 'Masculino', '31954433221', '1987-08-08', '60000000039', '30150021', 'Bloco K', 'Rua Enfermeiros, 3900', '100000039', 'MG', 'COREN019', NULL),
+(40, 2, 'Enf. Evellyn Braga', 'Feminino', '41954433221', '1992-07-07', '60000000040', '40060031', 'Casa 40', 'Rua Enfermeiros, 4000', '100000040', 'BA', 'COREN020', NULL),
+
+-- Estoquistas (id_cargo = 3, sem COREN/CRM)
+(41, 3, 'Carlos Andrade', 'Masculino', '51954433221', '1988-09-09', '60000000041', '90050041', 'Apt 1501', 'Rua Estoque, 4100', '100000041', 'RS', NULL, NULL),
+(42, 3, 'Marina Xavier', 'Feminino', '61954433221', '1991-05-05', '60000000042', '60050051', 'Bloco L', 'Rua Estoque, 4200', '100000042', 'CE', NULL, NULL),
+(43, 3, 'Rogério Paiva', 'Masculino', '71954433221', '1989-01-01', '60000000043', '70060061', 'Casa 43', 'Rua Estoque, 4300', '100000043', 'DF', NULL, NULL),
+(44, 3, 'Cláudia Vasconcelos', 'Feminino', '81954433221', '1990-11-11', '60000000044', '80070071', 'Apt 1601', 'Rua Estoque, 4400', '100000044', 'PR', NULL, NULL),
+(45, 3, 'Fernando Duarte', 'Masculino', '91954433221', '1993-04-04', '60000000045', '90080081', 'Bloco M', 'Rua Estoque, 4500', '100000045', 'RS', NULL, NULL),
+(46, 3, 'Tatiane Guimarães', 'Feminino', '11943322110', '1986-06-06', '60000000046', '01006001', 'Casa 46', 'Rua Estoque, 4600', '100000046', 'SP', NULL, NULL),
+(47, 3, 'Rodrigo Pinto', 'Masculino', '21943322110', '1998-08-08', '60000000047', '20090003', 'Apt 1701', 'Rua Estoque, 4700', '100000047', 'RJ', NULL, NULL),
+(48, 3, 'Carolina Neves', 'Feminino', '31943322110', '1995-03-03', '60000000048', '30160021', 'Bloco N', 'Rua Estoque, 4800', '100000048', 'MG', NULL, NULL),
+(49, 3, 'Igor Fernandes', 'Masculino', '41943322110', '1992-02-02', '60000000049', '40070031', 'Casa 49', 'Rua Estoque, 4900', '100000049', 'BA', NULL, NULL),
+(50, 3, 'Paula Lima', 'Feminino', '51943322110', '2000-05-05', '60000000050', '90090041', 'Apt 1801', 'Rua Estoque, 5000', '100000050', 'RS', NULL, NULL);
+
+INSERT INTO Cargo (id_cargo, nome) VALUES
+(1, 'Médico'),
+(2, 'Enfermeiro'),
+(3, 'Estoquista');
+
+INSERT INTO Especialidade_enfermeiro (id_especialidade_enfermeiro, id_funcionario, nome) VALUES
+(1, 2, 'Enfermagem em Clínica Médica'),
+(2, 2, 'Enfermagem Cirúrgica'),
+(3, 3, 'Enfermagem em Emergência e Urgência'),
+(4, 3, 'Enfermagem em Terapia Intensiva'),
+(5, 4, 'Enfermagem Obstétrica'),
+(6, 5, 'Enfermagem Pediátrica'),
+(7, 6, 'Enfermagem em Saúde Mental'),
+(8, 7, 'Enfermagem em Oncologia'),
+(9, 8, 'Enfermagem em Nefrologia'),
+(10, 9, 'Enfermagem em Clínica Médica'),
+
+(11, 10, 'Enfermagem Cirúrgica'),
+(12, 11, 'Enfermagem em Emergência e Urgência'),
+(13, 12, 'Enfermagem em Terapia Intensiva'),
+(14, 13, 'Enfermagem Obstétrica'),
+(15, 14, 'Enfermagem Pediátrica'),
+(16, 15, 'Enfermagem em Saúde Mental'),
+(17, 16, 'Enfermagem em Oncologia'),
+(18, 17, 'Enfermagem em Nefrologia'),
+(19, 18, 'Enfermagem em Clínica Médica'),
+(20, 19, 'Enfermagem Cirúrgica'),
+
+(21, 20, 'Enfermagem em Emergência e Urgência'),
+(22, 21, 'Enfermagem em Terapia Intensiva'),
+(23, 22, 'Enfermagem Obstétrica'),
+(24, 23, 'Enfermagem Pediátrica'),
+(25, 24, 'Enfermagem em Saúde Mental'),
+(26, 25, 'Enfermagem em Oncologia'),
+(27, 26, 'Enfermagem em Nefrologia'),
+(28, 27, 'Enfermagem em Clínica Médica'),
+(29, 28, 'Enfermagem Cirúrgica'),
+(30, 29, 'Enfermagem em Emergência e Urgência'),
+
+(31, 30, 'Enfermagem em Terapia Intensiva'),
+(32, 31, 'Enfermagem Obstétrica'),
+(33, 32, 'Enfermagem Pediátrica'),
+(34, 33, 'Enfermagem em Saúde Mental'),
+(35, 34, 'Enfermagem em Oncologia'),
+(36, 35, 'Enfermagem em Nefrologia'),
+(37, 36, 'Enfermagem em Clínica Médica'),
+(38, 37, 'Enfermagem Cirúrgica'),
+(39, 38, 'Enfermagem em Emergência e Urgência'),
+(40, 39, 'Enfermagem em Terapia Intensiva'),
+
+(41, 40, 'Enfermagem Obstétrica'),
+(42, 41, 'Enfermagem Pediátrica'),
+(43, 42, 'Enfermagem em Saúde Mental'),
+(44, 43, 'Enfermagem em Oncologia'),
+(45, 44, 'Enfermagem em Nefrologia'),
+(46, 45, 'Enfermagem em Clínica Médica'),
+(47, 46, 'Enfermagem Cirúrgica'),
+(48, 47, 'Enfermagem em Emergência e Urgência'),
+(49, 48, 'Enfermagem em Terapia Intensiva'),
+(50, 49, 'Enfermagem Obstétrica');
+
+INSERT INTO Especialidade_medico (id_especialidade_medico, id_funcionario, nome) VALUES
+(1, 50, 'Clínica médica'),
+(2, 50, 'Emergência'),
+(3, 51, 'Cirurgia geral'),
+(4, 52, 'Pediatria'),
+(5, 53, 'Ginecologia'),
+(6, 54, 'Ortopedia'),
+(7, 55, 'Cardiologia'),
+(8, 56, 'Neurologia'),
+(9, 57, 'Anestesiologia'),
+(10, 58, 'Radiologia'),
+
+(11, 59, 'Clínica médica'),
+(12, 60, 'Cirurgia geral'),
+(13, 61, 'Pediatria'),
+(14, 62, 'Ginecologia'),
+(15, 63, 'Ortopedia'),
+(16, 64, 'Cardiologia'),
+(17, 65, 'Neurologia'),
+(18, 66, 'Anestesiologia'),
+(19, 67, 'Radiologia'),
+(20, 68, 'Emergência'),
+
+(21, 69, 'Clínica médica'),
+(22, 70, 'Cirurgia geral'),
+(23, 71, 'Pediatria'),
+(24, 72, 'Ginecologia'),
+(25, 73, 'Ortopedia'),
+(26, 74, 'Cardiologia'),
+(27, 75, 'Neurologia'),
+(28, 76, 'Anestesiologia'),
+(29, 77, 'Radiologia'),
+(30, 78, 'Emergência'),
+
+(31, 79, 'Clínica médica'),
+(32, 80, 'Cirurgia geral'),
+(33, 81, 'Pediatria'),
+(34, 82, 'Ginecologia'),
+(35, 83, 'Ortopedia'),
+(36, 84, 'Cardiologia'),
+(37, 85, 'Neurologia'),
+(38, 86, 'Anestesiologia'),
+(39, 87, 'Radiologia'),
+(40, 88, 'Emergência'),
+
+(41, 89, 'Clínica médica'),
+(42, 90, 'Cirurgia geral'),
+(43, 91, 'Pediatria'),
+(44, 92, 'Ginecologia'),
+(45, 93, 'Ortopedia'),
+(46, 94, 'Cardiologia'),
+(47, 95, 'Neurologia'),
+(48, 96, 'Anestesiologia'),
+(49, 97, 'Radiologia'),
+(50, 98, 'Emergência');
+
+INSERT INTO Remedio (id_remedio, nome, descricao, validade, quantidade, fabricante, data_fabricacao) VALUES
+(1, 'Paracetamol 500mg', 'Analgésico e antitérmico', '2027-05-10', 120, 'MedLife', '2025-01-15'),
+(2, 'Ibuprofeno 400mg', 'Anti-inflamatório e analgésico', '2026-12-20', 90, 'PharmaPlus', '2024-08-10'),
+(3, 'Dipirona 1g', 'Analgésico e antitérmico', '2028-03-05', 150, 'SaúdeBrasil', '2025-03-01'),
+(4, 'Amoxicilina 500mg', 'Antibiótico penicilínico', '2027-07-14', 80, 'VidaPharma', '2025-02-11'),
+(5, 'Azitromicina 500mg', 'Antibiótico macrolídeo', '2026-11-25', 70, 'GlobalMed', '2024-07-20'),
+(6, 'Omeprazol 20mg', 'Reduz a acidez estomacal', '2028-01-01', 200, 'BioSaúde', '2025-05-18'),
+(7, 'Ranitidina 150mg', 'Tratamento de úlcera gástrica', '2027-09-30', 60, 'MediCorp', '2024-12-09'),
+(8, 'Loratadina 10mg', 'Antialérgico', '2026-10-10', 110, 'Alivium', '2024-06-15'),
+(9, 'Prednisona 20mg', 'Corticosteroide anti-inflamatório', '2027-08-12', 75, 'PharmaGlobal', '2025-04-01'),
+(10, 'Metformina 850mg', 'Controle de diabetes tipo 2', '2028-02-19', 130, 'DiabCare', '2025-02-01'),
+
+(11, 'Losartana 50mg', 'Antihipertensivo', '2027-04-08', 140, 'CardioPharma', '2024-09-22'),
+(12, 'AAS Infantil 100mg', 'Antiplaquetário', '2026-09-15', 95, 'SaúdeMais', '2024-05-10'),
+(13, 'Atorvastatina 20mg', 'Redução do colesterol', '2028-06-06', 100, 'ColestMed', '2025-03-19'),
+(14, 'Clopidogrel 75mg', 'Prevenção de trombose', '2027-12-12', 85, 'PharmaPlus', '2025-01-10'),
+(15, 'Enalapril 10mg', 'Antihipertensivo', '2026-11-01', 60, 'VidaPharma', '2024-07-05'),
+(16, 'Hidroclorotiazida 25mg', 'Diurético', '2027-02-21', 70, 'MedLife', '2025-01-29'),
+(17, 'Cetirizina 10mg', 'Antialérgico', '2028-04-18', 115, 'Alivium', '2025-04-05'),
+(18, 'Captopril 25mg', 'Controle da pressão arterial', '2026-07-30', 90, 'CardioPharma', '2024-08-19'),
+(19, 'Insulina NPH', 'Controle de diabetes', '2027-03-11', 50, 'DiabCare', '2025-01-02'),
+(20, 'Insulina Regular', 'Controle de diabetes', '2027-05-01', 55, 'DiabCare', '2025-02-15'),
+
+(21, 'Salbutamol Spray', 'Broncodilatador para asma', '2026-12-24', 40, 'RespiraBem', '2024-12-01'),
+(22, 'Budesonida Spray', 'Anti-inflamatório para asma', '2027-07-05', 30, 'RespiraBem', '2025-03-02'),
+(23, 'Montelucaste 10mg', 'Controle de asma', '2028-03-29', 65, 'BioSaúde', '2025-02-07'),
+(24, 'Dexametasona 4mg', 'Corticosteroide', '2026-08-15', 80, 'PharmaGlobal', '2024-06-25'),
+(25, 'Clorfeniramina 4mg', 'Antialérgico', '2027-10-30', 95, 'Alivium', '2025-01-11'),
+(26, 'Fluoxetina 20mg', 'Antidepressivo', '2028-05-14', 100, 'PsiqMed', '2025-05-01'),
+(27, 'Sertralina 50mg', 'Antidepressivo', '2027-01-19', 90, 'PsiqMed', '2024-09-15'),
+(28, 'Diazepam 10mg', 'Ansiolítico', '2026-06-07', 45, 'MediCorp', '2024-06-01'),
+(29, 'Clonazepam 2mg', 'Ansiolítico', '2028-01-09', 70, 'MediCorp', '2025-01-20'),
+(30, 'Haloperidol 5mg', 'Antipsicótico', '2027-09-22', 55, 'PsiqMed', '2024-12-12'),
+
+(31, 'Risperidona 2mg', 'Antipsicótico', '2026-04-25', 40, 'PsiqMed', '2024-05-01'),
+(32, 'Quetiapina 100mg', 'Antipsicótico', '2028-02-10', 50, 'PsiqMed', '2025-02-01'),
+(33, 'Levotiroxina 100mcg', 'Tratamento do hipotireoidismo', '2027-06-18', 130, 'EndoPharma', '2025-01-01'),
+(34, 'Propiltiouracil 100mg', 'Tratamento do hipertireoidismo', '2026-11-13', 40, 'EndoPharma', '2024-10-05'),
+(35, 'Sinvastatina 40mg', 'Redução de colesterol', '2028-04-04', 120, 'ColestMed', '2025-03-12'),
+(36, 'Rosuvastatina 10mg', 'Redução de colesterol', '2026-09-30', 80, 'ColestMed', '2024-09-12'),
+(37, 'Warfarina 5mg', 'Anticoagulante', '2027-12-01', 60, 'PharmaPlus', '2025-01-10'),
+(38, 'Heparina Sódica', 'Anticoagulante injetável', '2026-03-15', 35, 'PharmaGlobal', '2024-03-01'),
+(39, 'Enoxaparina 40mg', 'Anticoagulante injetável', '2028-07-21', 25, 'PharmaGlobal', '2025-05-15'),
+(40, 'Varfarina 1mg', 'Anticoagulante oral', '2027-01-01', 50, 'PharmaPlus', '2025-01-01'),
+
+(41, 'Nimesulida 100mg', 'Anti-inflamatório', '2026-10-12', 95, 'MedLife', '2024-11-01'),
+(42, 'Cetoprofeno 100mg', 'Anti-inflamatório', '2027-03-19', 60, 'PharmaPlus', '2025-01-20'),
+(43, 'Naproxeno 500mg', 'Anti-inflamatório', '2028-02-28', 85, 'MediCorp', '2025-02-01'),
+(44, 'Meloxicam 15mg', 'Anti-inflamatório', '2027-05-23', 75, 'PharmaGlobal', '2025-03-05'),
+(45, 'Diclofenaco 50mg', 'Anti-inflamatório', '2026-07-01', 90, 'MedLife', '2024-06-20'),
+(46, 'Gliclazida 80mg', 'Controle de diabetes tipo 2', '2028-01-17', 100, 'DiabCare', '2025-01-11'),
+(47, 'Glibenclamida 5mg', 'Controle de diabetes tipo 2', '2026-05-10', 75, 'DiabCare', '2024-05-01'),
+(48, 'Pioglitazona 30mg', 'Controle de diabetes tipo 2', '2027-09-09', 65, 'DiabCare', '2025-01-20'),
+(49, 'Sitagliptina 100mg', 'Controle de diabetes tipo 2', '2027-11-29', 55, 'DiabCare', '2025-02-10'),
+(50, 'Empagliflozina 25mg', 'Controle de diabetes tipo 2', '2028-08-15', 60, 'DiabCare', '2025-04-01');
+
+INSERT INTO Estoque_remedio (id_estoque, id_remedio, id_funcionario, quantidade, data_entrada, data_validade) VALUES
+(1, 1, 149, 200, '2024-01-15', '2027-05-10'),
+(2, 2, 150, 150, '2024-03-12', '2026-12-20'),
+(3, 3, 151, 180, '2025-02-01', '2028-03-05'),
+(4, 4, 152, 90, '2024-11-11', '2027-07-14'),
+(5, 5, 153, 100, '2024-08-09', '2026-11-25'),
+(6, 6, 154, 250, '2025-03-05', '2028-01-01'),
+(7, 7, 155, 70, '2024-07-20', '2027-09-30'),
+(8, 8, 156, 160, '2025-01-10', '2026-10-10'),
+(9, 9, 157, 85, '2024-12-05', '2027-08-12'),
+(10, 10, 158, 190, '2024-09-22', '2028-02-19'),
+
+(11, 11, 159, 120, '2024-04-18', '2027-04-08'),
+(12, 12, 160, 100, '2025-02-10', '2026-09-15'),
+(13, 13, 161, 110, '2024-05-15', '2028-06-06'),
+(14, 14, 162, 95, '2025-01-12', '2027-12-12'),
+(15, 15, 163, 80, '2024-07-05', '2026-11-01'),
+(16, 16, 164, 100, '2024-09-01', '2027-02-21'),
+(17, 17, 165, 150, '2025-03-19', '2028-04-18'),
+(18, 18, 166, 140, '2024-06-25', '2026-07-30'),
+(19, 19, 167, 60, '2025-01-02', '2027-03-11'),
+(20, 20, 168, 75, '2025-02-15', '2027-05-01'),
+
+(21, 21, 169, 50, '2024-12-01', '2026-12-24'),
+(22, 22, 170, 45, '2025-03-02', '2027-07-05'),
+(23, 23, 171, 85, '2025-02-07', '2028-03-29'),
+(24, 24, 172, 100, '2024-06-25', '2026-08-15'),
+(25, 25, 173, 120, '2025-01-11', '2027-10-30'),
+(26, 26, 174, 90, '2025-05-01', '2028-05-14'),
+(27, 27, 175, 100, '2024-09-15', '2027-01-19'),
+(28, 28, 176, 65, '2024-06-01', '2026-06-07'),
+(29, 29, 177, 85, '2025-01-20', '2028-01-09'),
+(30, 30, 178, 70, '2024-12-12', '2027-09-22'),
+
+(31, 31, 179, 60, '2024-05-01', '2026-04-25'),
+(32, 32, 180, 75, '2025-02-01', '2028-02-10'),
+(33, 33, 181, 130, '2025-01-01', '2027-06-18'),
+(34, 34, 182, 50, '2024-10-05', '2026-11-13'),
+(35, 35, 183, 125, '2025-03-12', '2028-04-04'),
+(36, 36, 184, 95, '2024-09-12', '2026-09-30'),
+(37, 37, 185, 80, '2025-01-10', '2027-12-01'),
+(38, 38, 186, 55, '2024-03-01', '2026-03-15'),
+(39, 39, 187, 35, '2025-05-15', '2028-07-21'),
+(40, 40, 188, 50, '2025-01-01', '2027-01-01'),
+
+(41, 41, 189, 100, '2024-11-01', '2026-10-12'),
+(42, 42, 190, 75, '2025-01-20', '2027-03-19'),
+(43, 43, 191, 95, '2025-02-01', '2028-02-28'),
+(44, 44, 192, 70, '2025-03-05', '2027-05-23'),
+(45, 45, 193, 110, '2024-06-20', '2026-07-01'),
+(46, 46, 194, 140, '2025-01-11', '2028-01-17'),
+(47, 47, 195, 90, '2024-05-01', '2026-05-10'),
+(48, 48, 196, 80, '2025-01-20', '2027-09-09'),
+(49, 49, 197, 75, '2025-02-10', '2027-11-29'),
+(50, 50, 198, 60, '2025-04-01', '2028-08-15');
+
+INSERT INTO Receita (id_receita, id_remedio, id_paciente, id_funcionario, data_emissao, quantidade, dosagem, periodo_consumo, UF_paciente, UF_funcionario) VALUES
+(1, 1, 1, 50, '2024-02-10', '1 caixa', '1 comprimido 8/8h', '7 dias', 'SP', 'SP'),
+(2, 2, 2, 51, '2024-03-15', '20 comprimidos', '400mg 12/12h', '10 dias', 'RJ', 'RJ'),
+(3, 3, 3, 52, '2024-04-01', '1 caixa', '1g 6/6h', '5 dias', 'MG', 'MG'),
+(4, 4, 4, 53, '2025-01-20', '14 cápsulas', '500mg 8/8h', '7 dias', 'BA', 'BA'),
+(5, 5, 5, 54, '2025-02-05', '6 comprimidos', '500mg 24/24h', '6 dias', 'RS', 'RS'),
+(6, 6, 6, 55, '2024-12-15', '2 caixas', '20mg 1x/dia', '30 dias', 'PR', 'PR'),
+(7, 7, 7, 56, '2024-11-11', '1 caixa', '150mg 2x/dia', '14 dias', 'SC', 'SC'),
+(8, 8, 8, 57, '2025-01-01', '10 comprimidos', '10mg 1x/dia', '10 dias', 'PE', 'PE'),
+(9, 9, 9, 58, '2024-09-25', '20 comprimidos', '20mg 1x/dia', '5 dias', 'GO', 'GO'),
+(10, 10, 10, 59, '2024-08-30', '30 comprimidos', '850mg 2x/dia', 'uso contínuo', 'DF', 'DF'),
+
+(11, 11, 11, 60, '2025-01-12', '1 caixa', '50mg 1x/dia', 'uso contínuo', 'SP', 'SP'),
+(12, 12, 12, 61, '2024-07-14', '20 comprimidos', '100mg 1x/dia', '30 dias', 'RJ', 'RJ'),
+(13, 13, 13, 62, '2025-02-22', '30 comprimidos', '20mg 1x/dia', 'uso contínuo', 'MG', 'MG'),
+(14, 14, 14, 63, '2024-06-06', '1 caixa', '75mg 1x/dia', '30 dias', 'BA', 'BA'),
+(15, 15, 15, 64, '2025-01-28', '15 comprimidos', '10mg 1x/dia', '15 dias', 'RS', 'RS'),
+(16, 16, 16, 65, '2024-12-01', '1 caixa', '25mg 1x/dia', 'uso contínuo', 'PR', 'PR'),
+(17, 17, 17, 66, '2024-05-19', '20 comprimidos', '10mg 1x/dia', '20 dias', 'SC', 'SC'),
+(18, 18, 18, 67, '2025-01-05', '1 caixa', '25mg 1x/dia', 'uso contínuo', 'PE', 'PE'),
+(19, 19, 19, 68, '2024-04-20', '2 frascos', '10 UI antes das refeições', 'uso contínuo', 'GO', 'GO'),
+(20, 20, 20, 69, '2025-01-11', '2 frascos', '10 UI 2x/dia', 'uso contínuo', 'DF', 'DF'),
+
+(21, 21, 21, 70, '2024-03-03', '1 spray', '2 jatos 12/12h', '30 dias', 'SP', 'SP'),
+(22, 22, 22, 71, '2024-06-10', '1 spray', '2 jatos 12/12h', '30 dias', 'RJ', 'RJ'),
+(23, 23, 23, 72, '2025-02-01', '30 comprimidos', '10mg 1x/dia', 'uso contínuo', 'MG', 'MG'),
+(24, 24, 24, 73, '2024-08-15', '10 comprimidos', '4mg 1x/dia', '10 dias', 'BA', 'BA'),
+(25, 25, 25, 74, '2025-01-08', '1 caixa', '4mg 1x/dia', '20 dias', 'RS', 'RS'),
+(26, 26, 26, 75, '2024-09-21', '28 cápsulas', '20mg 1x/dia', 'uso contínuo', 'PR', 'PR'),
+(27, 27, 27, 76, '2024-10-07', '30 comprimidos', '50mg 1x/dia', 'uso contínuo', 'SC', 'SC'),
+(28, 28, 28, 77, '2025-01-19', '10 comprimidos', '10mg 1x/dia', '10 dias', 'PE', 'PE'),
+(29, 29, 29, 78, '2024-11-12', '20 comprimidos', '2mg 1x/dia', '20 dias', 'GO', 'GO'),
+(30, 30, 30, 79, '2024-12-29', '15 comprimidos', '5mg 1x/dia', '15 dias', 'DF', 'DF'),
+
+(31, 31, 31, 80, '2024-04-18', '20 comprimidos', '2mg 1x/dia', '20 dias', 'SP', 'SP'),
+(32, 32, 32, 81, '2025-01-15', '30 comprimidos', '100mg 1x/dia', 'uso contínuo', 'RJ', 'RJ'),
+(33, 33, 33, 82, '2024-09-02', '30 comprimidos', '100mcg 1x/dia', 'uso contínuo', 'MG', 'MG'),
+(34, 34, 34, 83, '2024-05-10', '20 comprimidos', '100mg 1x/dia', '20 dias', 'BA', 'BA'),
+(35, 35, 35, 84, '2025-01-20', '30 comprimidos', '40mg 1x/dia', 'uso contínuo', 'RS', 'RS'),
+(36, 36, 36, 85, '2024-12-08', '30 comprimidos', '10mg 1x/dia', 'uso contínuo', 'PR', 'PR'),
+(37, 37, 37, 86, '2024-07-19', '30 comprimidos', '5mg 1x/dia', 'uso contínuo', 'SC', 'SC'),
+(38, 38, 38, 87, '2024-06-30', '10 ampolas', '5.000 UI injetável', '10 dias', 'PE', 'PE'),
+(39, 39, 39, 88, '2025-02-15', '5 ampolas', '40mg injetável', '5 dias', 'GO', 'GO'),
+(40, 40, 40, 89, '2024-10-01', '30 comprimidos', '1mg 1x/dia', '30 dias', 'DF', 'DF'),
+
+(41, 41, 41, 90, '2024-12-22', '20 comprimidos', '100mg 12/12h', '7 dias', 'SP', 'SP'),
+(42, 42, 42, 91, '2025-01-02', '30 comprimidos', '100mg 12/12h', '10 dias', 'RJ', 'RJ'),
+(43, 43, 43, 92, '2024-08-08', '20 comprimidos', '500mg 12/12h', '7 dias', 'MG', 'MG'),
+(44, 44, 44, 93, '2024-09-09', '15 comprimidos', '15mg 1x/dia', '15 dias', 'BA', 'BA'),
+(45, 45, 45, 94, '2025-01-29', '30 comprimidos', '50mg 12/12h', '10 dias', 'RS', 'RS'),
+(46, 46, 46, 95, '2024-07-07', '30 comprimidos', '80mg 1x/dia', 'uso contínuo', 'PR', 'PR'),
+(47, 47, 47, 96, '2024-11-05', '20 comprimidos', '5mg 1x/dia', '20 dias', 'SC', 'SC'),
+(48, 48, 48, 97, '2025-01-25', '30 comprimidos', '30mg 1x/dia', 'uso contínuo', 'PE', 'PE'),
+(49, 49, 49, 98, '2024-10-13', '30 comprimidos', '100mg 1x/dia', 'uso contínuo', 'GO', 'GO'),
+(50, 50, 50, 50, '2024-12-19', '30 comprimidos', '25mg 1x/dia', 'uso contínuo', 'DF', 'DF');
+
+INSERT INTO Sala (id_sala, id_funcionario) VALUES
+(1, 50),
+(2, 51),
+(3, 52),
+(4, 53),
+(5, 54),
+(6, 55),
+(7, 56),
+(8, 57),
+(9, 58),
+(10, 59),
+
+(11, 60),
+(12, 61),
+(13, 62),
+(14, 63),
+(15, 64),
+(16, 65),
+(17, 66),
+(18, 67),
+(19, 68),
+(20, 69),
+
+(21, 70),
+(22, 71),
+(23, 72),
+(24, 73),
+(25, 74),
+(26, 75),
+(27, 76),
+(28, 77),
+(29, 78),
+(30, 79),
+
+(31, 80),
+(32, 81),
+(33, 82),
+(34, 83),
+(35, 84),
+(36, 85),
+(37, 86),
+(38, 87),
+(39, 88),
+(40, 89),
+
+(41, 90),
+(42, 91),
+(43, 92),
+(44, 93),
+(45, 94),
+(46, 95),
+(47, 96),
+(48, 97),
+(49, 98),
+(50, 50);
+
+INSERT INTO Consulta (id_consulta, id_paciente, id_funcionario, id_sala, id_receita, temperatura, pressao_arterial, frequencia_cardiaca, diagnostico, data_hora) VALUES
+(1, 1, 50, 1, 1, 36.7, '120/80', 75, 'Dor de cabeça leve', '2024-02-10 08:30:00'),
+(2, 2, 51, 2, 2, 37.5, '130/85', 82, 'Febre e tosse', '2024-03-15 09:00:00'),
+(3, 3, 52, 3, 3, 38.2, '125/80', 90, 'Dor abdominal', '2024-04-01 10:15:00'),
+(4, 4, 53, 4, 4, 36.9, '110/70', 70, 'Verificação de rotina', '2025-01-20 11:00:00'),
+(5, 5, 54, 5, 5, 37.8, '135/90', 85, 'Dor muscular', '2025-02-05 14:30:00'),
+(6, 6, 55, 6, 6, 36.6, '120/80', 72, 'Problemas gástricos', '2024-12-15 08:45:00'),
+(7, 7, 56, 7, 7, 37.2, '125/75', 78, 'Alergia leve', '2024-11-11 10:00:00'),
+(8, 8, 57, 8, 8, 38.0, '130/85', 88, 'Febre baixa', '2025-01-01 09:30:00'),
+(9, 9, 58, 9, 9, 36.5, '115/75', 68, 'Consulta de rotina', '2024-09-25 11:15:00'),
+(10, 10, 59, 10, 10, 37.6, '140/90', 95, 'Dor de garganta', '2024-08-30 08:00:00'),
+
+(11, 11, 60, 11, 11, 36.8, '120/80', 74, 'Dor de cabeça frequente', '2025-01-12 08:30:00'),
+(12, 12, 61, 12, 12, 37.4, '130/85', 80, 'Infecção leve', '2024-07-14 09:15:00'),
+(13, 13, 62, 13, 13, 38.1, '125/80', 92, 'Gripe', '2025-02-22 10:45:00'),
+(14, 14, 63, 14, 14, 36.7, '115/75', 70, 'Check-up anual', '2024-06-06 11:30:00'),
+(15, 15, 64, 15, 15, 37.9, '135/88', 86, 'Dor nas costas', '2025-01-28 14:00:00'),
+(16, 16, 65, 16, 16, 36.5, '120/80', 72, 'Acidez estomacal', '2024-12-01 08:15:00'),
+(17, 17, 66, 17, 17, 37.3, '125/78', 79, 'Alergia respiratória', '2024-05-19 10:30:00'),
+(18, 18, 67, 18, 18, 38.2, '130/85', 88, 'Febre e mal-estar', '2025-01-05 09:45:00'),
+(19, 19, 68, 19, 19, 36.6, '115/70', 65, 'Controle de diabetes', '2024-04-20 11:00:00'),
+(20, 20, 69, 20, 20, 37.7, '140/90', 92, 'Hipertensão leve', '2025-01-11 08:00:00'),
+
+(21, 21, 70, 21, 21, 36.9, '120/80', 74, 'Asma leve', '2024-03-03 09:00:00'),
+(22, 22, 71, 22, 22, 37.5, '130/85', 85, 'Crise asmática', '2024-06-10 10:30:00'),
+(23, 23, 72, 23, 23, 36.8, '125/80', 78, 'Controle de alergia', '2025-02-01 11:15:00'),
+(24, 24, 73, 24, 24, 38.0, '130/85', 90, 'Inflamação', '2024-08-15 08:45:00'),
+(25, 25, 74, 25, 25, 36.7, '120/78', 72, 'Resfriado', '2025-01-08 09:30:00'),
+(26, 26, 75, 26, 26, 37.9, '135/88', 88, 'Ansiedade', '2024-09-21 10:00:00'),
+(27, 27, 76, 27, 27, 36.5, '120/80', 70, 'Depressão leve', '2024-10-07 08:15:00'),
+(28, 28, 77, 28, 28, 37.6, '130/85', 82, 'Distúrbio do sono', '2025-01-19 11:00:00'),
+(29, 29, 78, 29, 29, 36.9, '125/80', 78, 'Convulsão controlada', '2024-11-12 09:45:00'),
+(30, 30, 79, 30, 30, 37.8, '140/90', 92, 'Esquizofrenia', '2024-12-29 08:00:00'),
+
+(31, 31, 80, 31, 31, 36.7, '120/80', 74, 'Transtorno bipolar', '2024-04-18 10:00:00'),
+(32, 32, 81, 32, 32, 37.5, '130/85', 85, 'Depressão grave', '2025-01-15 09:30:00'),
+(33, 33, 82, 33, 33, 36.6, '125/80', 72, 'Hipotireoidismo', '2024-09-02 11:15:00'),
+(34, 34, 83, 34, 34, 37.8, '135/88', 88, 'Hipertireoidismo', '2024-05-10 08:45:00'),
+(35, 35, 84, 35, 35, 36.9, '120/80', 75, 'Colesterol alto', '2025-01-20 10:30:00'),
+(36, 36, 85, 36, 36, 37.7, '130/85', 82, 'Colesterol alto', '2024-12-08 09:00:00'),
+(37, 37, 86, 37, 37, 36.5, '125/78', 70, 'Trombose', '2024-07-19 08:15:00'),
+(38, 38, 87, 38, 38, 37.9, '140/90', 92, 'Trombose', '2024-06-30 11:00:00'),
+(39, 39, 88, 39, 39, 36.6, '120/80', 68, 'Anticoagulação', '2025-02-15 10:30:00'),
+(40, 40, 89, 40, 40, 37.8, '130/85', 85, 'Hipertensão', '2024-10-01 09:00:00'),
+
+(41, 41, 90, 41, 41, 36.9, '125/80', 75, 'Dor articular', '2024-12-22 08:30:00'),
+(42, 42, 91, 42, 42, 37.5, '135/88', 85, 'Inflamação', '2025-01-02 10:00:00'),
+(43, 43, 92, 43, 43, 36.7, '120/80', 72, 'Artrite', '2024-08-08 09:45:00'),
+(44, 44, 93, 44, 44, 37.9, '130/85', 88, 'Dor crônica', '2024-09-09 08:00:00'),
+(45, 45, 94, 45, 45, 36.5, '125/80', 70, 'Colesterol alto', '2025-01-29 11:15:00'),
+(46, 46, 95, 46, 46, 37.7, '140/90', 88, 'Diabetes', '2024-07-07 10:30:00'),
+(47, 47, 96, 47, 47, 36.8, '120/80', 75, 'Controle glicêmico', '2024-11-05 09:00:00'),
+(48, 48, 97, 48, 48, 37.6, '135/88', 85, 'Hipertensão', '2025-01-25 08:30:00'),
+(49, 49, 98, 49, 49, 36.9, '125/80', 72, 'Exame de rotina', '2024-10-13 10:00:00'),
+(50, 50, 50, 50, 50, 37.8, '140/90', 88, 'Consulta anual', '2024-12-19 09:45:00');
